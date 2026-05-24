@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>พอร์ตลงทุน</title>
+<link rel="manifest" href="manifest.json">
+<style>
+/* ── Reset & Base ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:'Sarabun',sans-serif;font-size:16px;background:#F0EFE9;color:#1a1a1a;overscroll-behavior:none}
+/* ── Sarabun font (Thai) ── */
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&display=swap');
+/* ── Layout ── */
+#app{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;background:#F0EFE9}
+/* ── Top Bar ── */
+.topbar{background:#1a1a2e;color:#fff;padding:env(safe-area-inset-top,0) 0 0;flex-shrink:0;z-index:10}
+.topbar-inner{padding:12px 16px 0}
+.topbar-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.app-title{font-size:17px;font-weight:600;letter-spacing:.3px}
+.portfolio-badge{background:#E6B84A;color:#1a1a2e;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+/* ── Portfolio Tabs ── */
+.ptabs{display:flex;gap:6px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
+.ptabs::-webkit-scrollbar{display:none}
+.ptab{font-size:12px;font-weight:500;padding:5px 14px;border-radius:20px;border:none;cursor:pointer;white-space:nowrap;transition:all .15s}
+.ptab.active{background:#E6B84A;color:#1a1a2e}
+.ptab.inactive{background:rgba(255,255,255,0.13);color:rgba(255,255,255,0.8)}
+/* ── Page Tabs ── */
+.pagetabs{display:flex;background:#fff;border-bottom:1px solid #eee;flex-shrink:0}
+.pagetab{flex:1;padding:11px 4px;text-align:center;font-size:12px;font-weight:500;color:#888;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.pagetab.active{color:#1a1a2e;border-bottom-color:#E6B84A}
+.pagetab i{display:block;font-size:18px;margin-bottom:2px}
+/* ── Scrollable content ── */
+.page{display:none;flex:1;overflow-y:auto;padding:12px 12px 80px;gap:10px;flex-direction:column}
+.page.active{display:flex}
+/* ── Stat Cards ── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-card{background:#fff;border-radius:12px;padding:11px 13px;border:0.5px solid rgba(0,0,0,0.08)}
+.stat-label{font-size:11px;color:#888;margin-bottom:3px}
+.stat-value{font-size:20px;font-weight:600;color:#1a1a2e}
+.stat-value.green{color:#1D9E75}
+.stat-value.amber{color:#BA7517}
+.stat-sub{font-size:10px;color:#1D9E75;margin-top:2px}
+/* ── Section headers ── */
+.sec{font-size:11px;font-weight:600;color:#888;letter-spacing:.6px;text-transform:uppercase;margin:6px 0 4px}
+/* ── Donut chart card ── */
+.chart-card{background:#fff;border-radius:12px;padding:12px;border:0.5px solid rgba(0,0,0,0.08);display:flex;align-items:center;gap:12px}
+.legend{flex:1}
+.leg-item{display:flex;align-items:center;gap:7px;margin-bottom:5px;font-size:11px}
+.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+/* ── Bar chart ── */
+.barchart-card{background:#fff;border-radius:12px;padding:12px;border:0.5px solid rgba(0,0,0,0.08)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:70px;margin-top:8px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bar-fill{width:100%;border-radius:3px 3px 0 0;min-height:2px}
+.bar-lbl{font-size:9px;color:#999}
+/* ── Broker cards ── */
+.broker-card{background:#fff;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);overflow:hidden}
+.broker-hdr{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:0.5px solid #f0f0f0}
+.broker-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.broker-name{font-size:13px;font-weight:600}
+.broker-type{font-size:10px;color:#999}
+.broker-total{margin-left:auto;font-size:15px;font-weight:600}
+.asset-row{display:flex;align-items:center;justify-content:space-between;padding:8px 13px;border-bottom:0.5px solid #f7f7f7}
+.asset-row:last-child{border-bottom:none}
+.asset-ticker{font-size:12px;font-weight:600}
+.asset-sub{font-size:10px;color:#999}
+.asset-val{font-size:13px;font-weight:600;text-align:right}
+.pos{color:#1D9E75}.neg{color:#E24B4A}
+/* ── Platform progress bar ── */
+.platform-bar-wrap{background:#fff;border-radius:12px;padding:12px;border:0.5px solid rgba(0,0,0,0.08)}
+.pbar{height:10px;border-radius:5px;display:flex;overflow:hidden;gap:2px;margin:8px 0 6px}
+.pbar-seg{border-radius:5px}
+.pbar-legend{display:flex;flex-wrap:wrap;gap:8px}
+.pleg{display:flex;align-items:center;gap:5px;font-size:10px;color:#666}
+/* ── Transaction list ── */
+.txn-item{background:#fff;border-radius:10px;padding:10px 13px;display:flex;align-items:center;gap:10px;border:0.5px solid rgba(0,0,0,0.07)}
+.txn-badge{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.badge-buy{background:#E1F5EE;color:#085041}
+.badge-sell{background:#FCEBEB;color:#791F1F}
+.badge-div{background:#FAEEDA;color:#633806}
+.txn-ticker{font-size:13px;font-weight:600}
+.txn-meta{font-size:10px;color:#999}
+.txn-amount{margin-left:auto;text-align:right}
+.txn-val{font-size:13px;font-weight:600}
+.txn-del{background:none;border:none;color:#ccc;font-size:18px;padding:4px 8px;cursor:pointer}
+/* ── FAB ── */
+.fab-area{position:fixed;bottom:env(safe-area-inset-bottom,0);left:50%;transform:translateX(-50%);width:100%;max-width:480px;padding:10px 12px;display:flex;gap:8px;background:linear-gradient(transparent,#F0EFE9 40%);pointer-events:none;z-index:20}
+.fab-btn{flex:1;padding:14px 0;border-radius:14px;border:none;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;pointer-events:all;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.fab-btn:active{opacity:.75}
+.fab-dark{background:#1a1a2e;color:#E6B84A}
+.fab-gold{background:#E6B84A;color:#1a1a2e}
+/* ── Modal ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 16px calc(env(safe-area-inset-bottom,0) + 20px);max-height:90vh;overflow-y:auto}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;font-size:22px;color:#999;cursor:pointer;padding:0 4px}
+/* ── Form ── */
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:#666;margin-bottom:5px;display:block}
+.form-control{width:100%;padding:12px 13px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:15px;font-family:inherit;color:#1a1a2e;background:#fafafa;transition:border .15s}
+.form-control:focus{outline:none;border-color:#1a1a2e;background:#fff}
+select.form-control{cursor:pointer}
+.type-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.type-btn{padding:11px 6px;border-radius:10px;border:1.5px solid #e8e8e8;background:#fafafa;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s;text-align:center}
+.type-btn.selected-buy{background:#E1F5EE;border-color:#1D9E75;color:#085041}
+.type-btn.selected-sell{background:#FCEBEB;border-color:#E24B4A;color:#791F1F}
+.type-btn.selected-div{background:#FAEEDA;border-color:#E6B84A;color:#633806}
+.submit-btn{width:100%;padding:15px;border-radius:12px;border:none;background:#1a1a2e;color:#E6B84A;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px;transition:opacity .15s}
+.submit-btn:active{opacity:.8}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+/* ── Loader ── */
+.loader{display:flex;align-items:center;justify-content:center;padding:40px;color:#999;font-size:14px;flex-direction:column;gap:10px}
+.spinner{width:28px;height:28px;border:3px solid #eee;border-top-color:#1a1a2e;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ── Toast ── */
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;z-index:200;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+/* ── Empty state ── */
+.empty{text-align:center;padding:40px 20px;color:#aaa;font-size:14px}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-row">
+        <span class="app-title">📊 พอร์ตลงทุน</span>
+        <span class="portfolio-badge" id="badge-count">...</span>
+      </div>
+    </div>
+    <div class="ptabs" id="ptabs"></div>
+  </div>
+
+  <!-- Page Tabs -->
+  <div class="pagetabs">
+    <button class="pagetab active" onclick="showPage('dashboard',this)">
+      <i class="ti ti-layout-dashboard"></i>หน้าหลัก
+    </button>
+    <button class="pagetab" onclick="showPage('broker',this)">
+      <i class="ti ti-building-bank"></i>เงินอยู่ที่ไหน
+    </button>
+    <button class="pagetab" onclick="showPage('history',this)">
+      <i class="ti ti-list"></i>รายการ
+    </button>
+  </div>
+
+  <!-- Page: Dashboard -->
+  <div class="page active" id="page-dashboard">
+    <div class="loader" id="dash-loader"><div class="spinner"></div>กำลังโหลด...</div>
+    <div id="dash-content" style="display:none;flex-direction:column;gap:10px"></div>
+  </div>
+
+  <!-- Page: Broker -->
+  <div class="page" id="page-broker">
+    <div class="loader" id="broker-loader"><div class="spinner"></div>กำลังโหลด...</div>
+    <div id="broker-content" style="display:none;flex-direction:column;gap:10px"></div>
+  </div>
+
+  <!-- Page: History -->
+  <div class="page" id="page-history">
+    <div class="loader" id="history-loader"><div class="spinner"></div>กำลังโหลด...</div>
+    <div id="history-content" style="display:none;flex-direction:column;gap:8px"></div>
+  </div>
+
+  <!-- FAB -->
+  <div class="fab-area">
+    <button class="fab-btn fab-dark" onclick="openModal('BUY')">➕ ซื้อ/ขาย</button>
+    <button class="fab-btn fab-gold" onclick="openModal('DIVIDEND')">💰 ปันผล</button>
+  </div>
+</div>
+
+<!-- Modal: Add Transaction -->
+<div class="modal-bg" id="modal-bg" onclick="closeModalBg(event)">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-title-text">บันทึกรายการ</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <!-- Type selector -->
+    <div class="form-group">
+      <label class="form-label">ประเภท</label>
+      <div class="type-btns">
+        <button class="type-btn" onclick="setType('BUY')"  id="btn-buy">🟢 ซื้อ</button>
+        <button class="type-btn" onclick="setType('SELL')" id="btn-sell">🔴 ขาย</button>
+        <button class="type-btn" onclick="setType('DIVIDEND')" id="btn-div">🟡 ปันผล</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">วันที่</label>
+      <input type="date" class="form-control" id="f-date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">พอร์ต</label>
+      <select class="form-control" id="f-portfolio"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">แพลตฟอร์ม / โบรค</label>
+      <select class="form-control" id="f-broker"></select>
+    </div>
+    <div class="row2">
+      <div class="form-group">
+        <label class="form-label">ชื่อหลักทรัพย์</label>
+        <input type="text" class="form-control" id="f-ticker" placeholder="เช่น PTT, SCBDV">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ประเภทสินทรัพย์</label>
+        <select class="form-control" id="f-assetclass">
+          <option value="หุ้น">หุ้น (SET)</option>
+          <option value="กองทุน">กองทุนรวม</option>
+          <option value="ทอง">ทองคำ</option>
+          <option value="คริปโต">คริปโต</option>
+          <option value="พันธบัตร">พันธบัตร</option>
+          <option value="US Stock">US Stock</option>
+        </select>
+      </div>
+    </div>
+    <div id="buy-sell-fields">
+      <div class="row2">
+        <div class="form-group">
+          <label class="form-label">จำนวน (หุ้น/หน่วย)</label>
+          <input type="number" class="form-control" id="f-shares" placeholder="0" inputmode="decimal">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ราคาต่อหน่วย (฿)</label>
+          <input type="number" class="form-control" id="f-price" placeholder="0.00" inputmode="decimal">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ค่าธรรมเนียม (฿)</label>
+        <input type="number" class="form-control" id="f-fee" placeholder="0" inputmode="decimal" value="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" id="amount-label">ยอดเงิน (฿)</label>
+      <input type="number" class="form-control" id="f-amount" placeholder="0.00" inputmode="decimal">
+    </div>
+    <div class="form-group">
+      <label class="form-label">หมายเหตุ</label>
+      <input type="text" class="form-control" id="f-note" placeholder="ไม่บังคับ">
+    </div>
+    <button class="submit-btn" onclick="submitTransaction()">💾 บันทึก</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script>
+// ══════════════════════════════════════════════
+// ⚙️  CONFIG — ใส่ URL จาก Apps Script ที่นี่
+// ══════════════════════════════════════════════
+const API_URL = 'https://script.google.com/macros/s/AKfycbz19zh_tXWWqqTKh5zkcox4hW19Xxy_Ud2tb-a79TUtwEcridfdIZ8Aqb_NO1_gp93v4A/exec';
+// ══════════════════════════════════════════════
+
+let currentPortfolio = 'ALL';
+let currentType = 'BUY';
+let portfolios  = [];
+let brokers     = [];
+
+// ── Init ──────────────────────────────────────
+async function init() {
+  setTodayDate();
+  await Promise.all([loadPortfolios(), loadBrokers()]);
+  loadDashboard();
+}
+
+function setTodayDate() {
+  const d = new Date();
+  const s = d.toISOString().split('T')[0];
+  document.getElementById('f-date').value = s;
+}
+
+// ── API call ──────────────────────────────────
+async function api(params) {
+  const url = API_URL + '?' + new URLSearchParams(params);
+  const res  = await fetch(url);
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || 'API error');
+  return json.data;
+}
+
+async function apiPost(body) {
+  const res  = await fetch(API_URL, {
+    method:'POST',
+    body: JSON.stringify(body),
+    headers:{'Content-Type':'application/json'}
+  });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || 'API error');
+  return json.data;
+}
+
+// ── Portfolio Tabs ─────────────────────────────
+async function loadPortfolios() {
+  portfolios = await api({ action:'getPortfolios' });
+  const tabs = document.getElementById('ptabs');
+  tabs.innerHTML = '';
+  const all = [{ name:'ALL', color:'#E6B84A' }, ...portfolios];
+  all.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'ptab ' + (p.name === 'ALL' ? 'active' : 'inactive');
+    btn.textContent = p.name === 'ALL' ? '🌐 ทั้งหมด' : p.name;
+    btn.onclick = () => {
+      document.querySelectorAll('.ptab').forEach(b=>b.className='ptab inactive');
+      btn.className = 'ptab active';
+      currentPortfolio = p.name;
+      loadDashboard();
+      if (document.getElementById('page-broker').classList.contains('active')) loadBroker();
+      if (document.getElementById('page-history').classList.contains('active')) loadHistory();
+    };
+    tabs.appendChild(btn);
+  });
+  document.getElementById('badge-count').textContent = portfolios.length + ' พอร์ต';
+
+  const sel = document.getElementById('f-portfolio');
+  sel.innerHTML = portfolios.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+}
+
+async function loadBrokers() {
+  brokers = await api({ action:'getBrokers' });
+  const sel = document.getElementById('f-broker');
+  sel.innerHTML = brokers.map(b=>`<option value="${b.name}">${b.name} (${b.assetClass})</option>`).join('');
+}
+
+// ── Pages ──────────────────────────────────────
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.pagetab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  el.classList.add('active');
+  if (name==='dashboard') loadDashboard();
+  if (name==='broker')    loadBroker();
+  if (name==='history')   loadHistory();
+}
+
+// ── Dashboard ──────────────────────────────────
+async function loadDashboard() {
+  show('dash-loader'); hide('dash-content');
+  try {
+    const d = await api({ action:'getDashboard', portfolio: currentPortfolio });
+    renderDashboard(d);
+  } catch(e) { showToast('❌ โหลดไม่ได้: '+e.message); }
+  hide('dash-loader');
+}
+
+function renderDashboard(d) {
+  const el = document.getElementById('dash-content');
+  const totalCost = d.totalCost || 0;
+
+  // Donut data from holdings
+  const topH = (d.holdings || []).slice(0,5);
+  const COLORS = ['#1a1a2e','#E6B84A','#1D9E75','#378ADD','#D85A30'];
+
+  // Monthly bar data — last 12 months
+  const months = getLast12Months();
+  const maxDiv  = Math.max(1, ...months.map(m => d.monthlyDividend[m]||0));
+
+  el.innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">ต้นทุนรวม</div>
+        <div class="stat-value">${fmtTHB(totalCost)}</div>
+        <div class="stat-sub">${(d.holdings||[]).length} หลักทรัพย์</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ปันผลสะสม (Net)</div>
+        <div class="stat-value amber">${fmtTHB(d.totalNetDividend)}</div>
+        <div class="stat-sub">ปี ${new Date().getFullYear()}: ${fmtTHB(d.yearlyDividend[new Date().getFullYear()]||0)}</div>
+      </div>
+    </div>
+
+    <div class="sec">สัดส่วนสินทรัพย์</div>
+    <div class="chart-card">
+      <canvas id="donut" width="90" height="90"></canvas>
+      <div class="legend" id="donut-legend"></div>
+    </div>
+
+    <div class="sec">ปันผลสุทธิรายเดือน (฿)</div>
+    <div class="barchart-card">
+      <div class="bars" id="monthly-bars"></div>
+    </div>
+
+    <div class="sec">รายการถือครอง</div>
+    ${(d.holdings||[]).map(h=>`
+      <div class="txn-item">
+        <div class="txn-badge badge-buy">${h.assetClass||'—'}</div>
+        <div>
+          <div class="txn-ticker">${h.ticker}</div>
+          <div class="txn-meta">${h.portfolio} · ${fmtNum(h.shares)} หน่วย · ต้นทุน ${fmtTHB(h.avgCost)}/หน่วย</div>
+        </div>
+        <div class="txn-amount">
+          <div class="txn-val">${fmtTHB(h.totalCost)}</div>
+          <div class="txn-meta">${h.broker||'—'}</div>
+        </div>
+      </div>`).join('') || '<div class="empty">ยังไม่มีข้อมูล</div>'}
+  `;
+
+  show('dash-content');
+
+  // Donut canvas
+  drawDonut(topH, COLORS, totalCost);
+
+  // Legend
+  const leg = document.getElementById('donut-legend');
+  leg.innerHTML = topH.map((h,i)=>`
+    <div class="leg-item">
+      <div class="leg-dot" style="background:${COLORS[i]}"></div>
+      <span>${h.ticker}</span>
+      <span style="margin-left:auto;font-weight:600">${pct(h.totalCost,totalCost)}</span>
+    </div>`).join('');
+
+  // Monthly bars
+  const barsEl = document.getElementById('monthly-bars');
+  barsEl.innerHTML = months.map(m => {
+    const val = d.monthlyDividend[m]||0;
+    const h   = Math.round((val/maxDiv)*60)+2;
+    const lbl = m.split('-')[1];
+    return `<div class="bar-col">
+      <div class="bar-fill" style="height:${h}px;background:${val>0?'#1a1a2e':'#e8e8e8'}"></div>
+      <div class="bar-lbl">${lbl}</div>
+    </div>`;
+  }).join('');
+}
+
+function drawDonut(holdings, colors, total) {
+  const canvas = document.getElementById('donut');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = 90; canvas.height = 90;
+  const cx=45, cy=45, r=36, thick=14;
+  if (!holdings.length) {
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle='#eee'; ctx.lineWidth=thick; ctx.stroke(); return;
+  }
+  let start = -Math.PI/2;
+  holdings.forEach((h,i) => {
+    const slice = (h.totalCost/total)*Math.PI*2;
+    ctx.beginPath(); ctx.arc(cx,cy,r,start,start+slice);
+    ctx.strokeStyle=colors[i]; ctx.lineWidth=thick; ctx.stroke();
+    start+=slice+0.02;
+  });
+}
+
+// ── Broker Breakdown ───────────────────────────
+async function loadBroker() {
+  show('broker-loader'); hide('broker-content');
+  try {
+    const d = await api({ action:'getBrokerBreakdown', portfolio: currentPortfolio });
+    renderBroker(d);
+  } catch(e) { showToast('❌ โหลดไม่ได้: '+e.message); }
+  hide('broker-loader');
+}
+
+function renderBroker(brokerData) {
+  const el = document.getElementById('broker-content');
+  const grandTotal = brokerData.reduce((s,b)=>s+b.totalCost,0);
+
+  const brokerMeta = {};
+  brokers.forEach(b=>brokerMeta[b.name]={ color:b.color, icon:b.icon });
+
+  const FALLBACK_COLORS = ['#1a1a2e','#378ADD','#1D9E75','#E6B84A','#D85A30','#7F77DD'];
+
+  el.innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">รวมทุกแพลตฟอร์ม</div>
+        <div class="stat-value">${fmtTHB(grandTotal)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">จำนวนแพลตฟอร์ม</div>
+        <div class="stat-value">${brokerData.length} แอป</div>
+      </div>
+    </div>
+
+    <div class="sec">สัดส่วนตามแพลตฟอร์ม</div>
+    <div class="platform-bar-wrap">
+      <div class="pbar">
+        ${brokerData.map((b,i)=>{
+          const w = grandTotal>0 ? Math.round(b.totalCost/grandTotal*100) : 0;
+          const c = (brokerMeta[b.broker]||{}).color || FALLBACK_COLORS[i%FALLBACK_COLORS.length];
+          return `<div class="pbar-seg" style="flex:${w};background:${c}"></div>`;
+        }).join('')}
+      </div>
+      <div class="pbar-legend">
+        ${brokerData.map((b,i)=>{
+          const w = grandTotal>0 ? Math.round(b.totalCost/grandTotal*100) : 0;
+          const c = (brokerMeta[b.broker]||{}).color || FALLBACK_COLORS[i%FALLBACK_COLORS.length];
+          return `<div class="pleg"><div class="leg-dot" style="background:${c}"></div>${b.broker} ${w}%</div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="sec">รายละเอียดแต่ละแพลตฟอร์ม</div>
+    ${brokerData.map((b,i)=>{
+      const meta = brokerMeta[b.broker]||{};
+      const color = meta.color || FALLBACK_COLORS[i%FALLBACK_COLORS.length];
+      const icon  = meta.icon  || b.broker.substring(0,2).toUpperCase();
+      const bgLight = color+'22';
+      return `<div class="broker-card">
+        <div class="broker-hdr">
+          <div class="broker-ico" style="background:${bgLight};color:${color}">${icon}</div>
+          <div>
+            <div class="broker-name">${b.broker}</div>
+            <div class="broker-type">${b.assets.map(a=>a.assetClass).filter((v,i,a)=>a.indexOf(v)===i).join(', ')||'—'}</div>
+          </div>
+          <div class="broker-total">${fmtTHB(b.totalCost)}</div>
+        </div>
+        ${b.assets.map(a=>`
+          <div class="asset-row">
+            <div>
+              <div class="asset-ticker">${a.ticker}</div>
+              <div class="asset-sub">${fmtNum(a.shares)} หน่วย · ต้นทุนเฉลี่ย ${fmtTHB(a.avgCost)}</div>
+            </div>
+            <div>
+              <div class="asset-val">${fmtTHB(a.totalCost)}</div>
+              <div class="asset-sub" style="text-align:right">${a.assetClass}</div>
+            </div>
+          </div>`).join('')}
+        ${b.totalDiv>0 ? `<div class="asset-row" style="background:#FAEEDA10">
+          <div><div class="asset-ticker" style="color:#BA7517">ปันผลสะสม (Net)</div></div>
+          <div class="asset-val" style="color:#BA7517">${fmtTHB(b.totalDiv)}</div>
+        </div>` : ''}
+      </div>`;
+    }).join('') || '<div class="empty">ยังไม่มีข้อมูล</div>'}
+  `;
+  show('broker-content');
+}
+
+// ── History ────────────────────────────────────
+async function loadHistory() {
+  show('history-loader'); hide('history-content');
+  try {
+    const txns = await api({ action:'getTransactions', portfolio: currentPortfolio });
+    renderHistory(txns);
+  } catch(e) { showToast('❌ โหลดไม่ได้: '+e.message); }
+  hide('history-loader');
+}
+
+function renderHistory(txns) {
+  const el = document.getElementById('history-content');
+  if (!txns.length) { el.innerHTML='<div class="empty">ยังไม่มีรายการ</div>'; show('history-content'); return; }
+  el.innerHTML = txns.map(t=>{
+    const badge = t.type==='BUY'?'badge-buy':t.type==='SELL'?'badge-sell':'badge-div';
+    const lbl   = t.type==='BUY'?'ซื้อ':t.type==='SELL'?'ขาย':'ปันผล';
+    return `<div class="txn-item">
+      <div class="txn-badge ${badge}">${lbl}</div>
+      <div style="flex:1;min-width:0">
+        <div class="txn-ticker">${t.ticker} <span style="font-size:10px;color:#aaa;font-weight:400">${t.broker||''}</span></div>
+        <div class="txn-meta">${fmtDate(t.date)} · ${t.portfolio}</div>
+      </div>
+      <div class="txn-amount">
+        <div class="txn-val ${t.type==='SELL'?'pos':''}">${fmtTHB(t.amount)}</div>
+        <div class="txn-meta">${t.type!=='DIVIDEND'&&t.shares?fmtNum(t.shares)+' หน่วย':''}</div>
+      </div>
+      <button class="txn-del" onclick="deleteTxn(${t._row},'${t.ticker}')">🗑</button>
+    </div>`;
+  }).join('');
+  show('history-content');
+}
+
+async function deleteTxn(row, ticker) {
+  if (!confirm(`ลบรายการ ${ticker}?`)) return;
+  try {
+    await apiPost({ action:'deleteTransaction', row });
+    showToast('✅ ลบแล้ว');
+    loadHistory();
+  } catch(e) { showToast('❌ '+e.message); }
+}
+
+// ── Modal ──────────────────────────────────────
+function openModal(type) {
+  setType(type);
+  document.getElementById('modal-bg').classList.add('open');
+  document.getElementById('f-ticker').focus();
+}
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+function closeModalBg(e) { if(e.target===document.getElementById('modal-bg')) closeModal(); }
+
+function setType(t) {
+  currentType = t;
+  ['BUY','SELL','DIVIDEND'].forEach(x=>{
+    document.getElementById('btn-'+x.toLowerCase()).className='type-btn';
+  });
+  const map={BUY:'selected-buy',SELL:'selected-sell',DIVIDEND:'selected-div'};
+  document.getElementById('btn-'+t.toLowerCase()).classList.add(map[t]);
+  document.getElementById('buy-sell-fields').style.display = t==='DIVIDEND'?'none':'block';
+  document.getElementById('amount-label').textContent = t==='DIVIDEND'?'ยอดปันผลสุทธิ (Net หลังหักภาษีแล้ว)':'ยอดเงินรวม (฿)';
+}
+
+async function submitTransaction() {
+  const data = {
+    date:       document.getElementById('f-date').value,
+    portfolio:  document.getElementById('f-portfolio').value,
+    broker:     document.getElementById('f-broker').value,
+    ticker:     document.getElementById('f-ticker').value.trim(),
+    type:       currentType,
+    shares:     document.getElementById('f-shares').value,
+    price:      document.getElementById('f-price').value,
+    amount:     document.getElementById('f-amount').value,
+    fee:        document.getElementById('f-fee').value,
+    note:       document.getElementById('f-note').value,
+    assetClass: document.getElementById('f-assetclass').value
+  };
+  if (!data.date||!data.ticker||!data.amount) { showToast('⚠️ กรุณากรอกข้อมูลให้ครบ'); return; }
+  try {
+    await apiPost({ action:'addTransaction', data });
+    showToast('✅ บันทึกสำเร็จ!');
+    closeModal();
+    // Clear amount fields
+    ['f-shares','f-price','f-amount','f-fee','f-note'].forEach(id=>{
+      const el=document.getElementById(id);
+      el.value = id==='f-fee'?'0':'';
+    });
+    loadDashboard();
+  } catch(e) { showToast('❌ '+e.message); }
+}
+
+// ── Helpers ────────────────────────────────────
+function fmtTHB(n) { return '฿'+(Number(n)||0).toLocaleString('th-TH',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+function fmtNum(n) { return (Number(n)||0).toLocaleString('th-TH',{maximumFractionDigits:2}); }
+function pct(a,b)  { return b>0?(Math.round(a/b*1000)/10)+'%':'0%'; }
+function fmtDate(d){ return d?String(d).substring(0,10):'—'; }
+function getLast12Months() {
+  const res=[]; const now=new Date();
+  for(let i=11;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    res.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
+  }
+  return res;
+}
+function show(id){ const el=document.getElementById(id); if(el){ el.style.display='flex'; } }
+function hide(id){ const el=document.getElementById(id); if(el){ el.style.display='none'; } }
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── Auto-calculate amount for BUY/SELL ─────────
+document.addEventListener('DOMContentLoaded',()=>{
+  ['f-shares','f-price'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',()=>{
+      if (currentType!=='DIVIDEND') {
+        const s=parseFloat(document.getElementById('f-shares').value)||0;
+        const p=parseFloat(document.getElementById('f-price').value)||0;
+        if(s&&p) document.getElementById('f-amount').value=(s*p).toFixed(2);
+      }
+    });
+  });
+  init();
+});
+</script>
+</body>
+</html>
